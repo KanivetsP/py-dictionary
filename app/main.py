@@ -5,6 +5,7 @@ class Pair:
     def __init__(self, key: str, value: Any) -> None:
         self.key = key
         self.value = value
+        self.hash = hash(key)
 
 
 class Dictionary:
@@ -20,7 +21,7 @@ class Dictionary:
         self.buckets = [None] * self.capacity
         for item in old_buckets:
             if item is not None:
-                index = hash(item.key) % self.capacity
+                index = item.hash % self.capacity
                 while self.buckets[index] is not None:
                     index = (index + 1) % self.capacity
                 self.buckets[index] = item
@@ -28,23 +29,26 @@ class Dictionary:
     def __setitem__(self, key: str, value: Any) -> None:
         if self.size == self.capacity:
             self.resize()
-        index = hash(key) % self.capacity
+        key_hash = hash(key)
+        index = key_hash % self.capacity
         while self.buckets[index] is not None:
             if self.buckets[index].key == key:
                 self.buckets[index].value = value
                 return
             index = (index + 1) % self.capacity
+
         self.buckets[index] = Pair(key, value)
         self.size += 1
-        return
 
     def __getitem__(self, key: str) -> Any:
-        index = hash(key) % self.capacity
+        key_hash = hash(key)
+        index = key_hash % self.capacity
+
         while self.buckets[index] is not None:
             if self.buckets[index].key == key:
                 return self.buckets[index].value
             index = (index + 1) % self.capacity
-        raise KeyError()
+        raise KeyError(f"Key {key!r} not found")
 
     def __len__(self) -> int:
         return self.size
@@ -57,10 +61,11 @@ class Dictionary:
             self.size -= 1
             self[node.key] = node.value
             index = (index + 1) % self.capacity
-        return
 
     def __delitem__(self, key: str) -> None:
-        index = hash(key) % self.capacity
+        key_hash = hash(key)
+        index = key_hash % self.capacity
+
         while self.buckets[index] is not None:
             if self.buckets[index].key == key:
                 self.buckets[index] = None
@@ -68,10 +73,12 @@ class Dictionary:
                 self._rehash_from(index)
                 return
             index = (index + 1) % self.capacity
-        raise KeyError()
+        raise KeyError(f"Key {key!r} not found")
 
     def pop(self, key: str, default: Any = None) -> Any:
-        index = hash(key) % self.capacity
+        key_hash = hash(key)
+        index = key_hash % self.capacity
+
         while self.buckets[index] is not None:
             if self.buckets[index].key == key:
                 value = self.buckets[index].value
@@ -95,7 +102,9 @@ class Dictionary:
         self.size = 0
 
     def get(self, key: str, default: Any = None) -> Any:
-        index = hash(key) % self.capacity
+        key_hash = hash(key)
+        index = key_hash % self.capacity
+
         while self.buckets[index] is not None:
             if self.buckets[index].key == key:
                 return self.buckets[index].value
